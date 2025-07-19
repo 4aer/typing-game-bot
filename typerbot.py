@@ -12,6 +12,21 @@ TYPING_SITES = {
         "url": "https://play.typeracer.com/",
         "interval": 0.05
     },
+    2: {
+        "name": "Nitro Type", 
+        "url": "https://www.nitrotype.com/race",
+        "interval": 0.01
+    },
+    3: {
+        "name": "Human Benchmark",
+        "url": "https://humanbenchmark.com/tests/typing",
+        "interval": 0.01
+    },
+    4: {
+        "name": "Monkeytype (works fine at 15 seconds)",
+        "url": "https://monkeytype.com/",
+        "interval": 0.05
+    }
 }
 
 def select_site():
@@ -22,11 +37,11 @@ def select_site():
     
     while True:
         try:
-            choice = int(input("\nSelect a site: "))
+            choice = int(input("\nSelect a site (1-4): "))
             if choice in TYPING_SITES:
                 return choice
             else:
-                print("Invalid choice.")
+                print("Invalid choice. Please select 1-4.")
         except ValueError:
             print("Please enter a valid number.")
 
@@ -46,6 +61,25 @@ def get_text_to_type(driver, bot_type):
         for span in spans:
             if "unselectable" in str(span):
                 text += span.text
+    
+    elif bot_type == 2: # Nitro Type
+        spans = soup.find_all("span", {"class": "dash-letter"})
+        for span in spans:
+            text += span.text
+        text = " ".join(text.split())
+    
+    elif bot_type == 3: # Human Benchmark Typing Test
+        spans = soup.find_all("span", {"class": "incomplete"})
+        for span in spans:
+            text += span.text
+    
+    elif bot_type == 4: # Monkeytype 
+        divs = soup.find_all("div", {"class": "word"})
+        for div_element in divs:
+            letters = div_element.find_all("letter")
+            for letter in letters:
+                text += letter.text
+            text += " "
     
     if not text:
         print("No text found")
