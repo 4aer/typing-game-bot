@@ -4,6 +4,8 @@ from bs4 import BeautifulSoup
 import pyautogui
 import keyboard
 import time
+import threading
+import sys
 
 # dictionary for different typing sites
 TYPING_SITES = {
@@ -88,41 +90,79 @@ def get_text_to_type(driver, bot_type):
         print(f"Text to type: {text[:50]}..." if len(text) > 50 else f"Text to type: {text}")
     return text.strip()
 
+# Global flag to control script execution
+stop_script = False
+
+def emergency_stop():
+    """Emergency stop function"""
+    global stop_script
+    stop_script = True
+    print("\nEMERGENCY STOP ACTIVATED! Script will terminate...")
+    sys.exit(0)
+
+def setup_emergency_stop():
+    """Set up emergency stop hotkey"""
+    keyboard.add_hotkey('ctrl+shift+q', emergency_stop)
+    print("Emergency stop hotkey: Ctrl+Shift+Q")
+
 def type_text(text, bot_type):
     """Type the text with appropriate interval for the selected site"""
+    global stop_script
     interval = TYPING_SITES[bot_type]["interval"]
-    pyautogui.typewrite(text, interval=interval)
+    
+    # Type character by character with stop checks
+    for char in text:
+        if stop_script:
+            print("Typing stopped by user.")
+            break
+        pyautogui.typewrite(char, interval=interval)
 
 def main():
-    # select which site to use
+    # Set up emergency stop
+    setup_emergency_stop()
+    
+    # Select which site to use
     bot_type = select_site()
     selected_site = TYPING_SITES[bot_type]
     
     print(f"\nStarting bot for {selected_site['name']}")
     print(f"URL: {selected_site['url']}")
     print("Press Ctrl+Alt+T when ready to start typing...")
+    print("EMERGENCY STOP: Press Ctrl+Shift+Q to stop the script at any time")
     
-    # setup Chrome driver
-    chrome_options = Options()
-    chrome_options.add_experimental_option("detach", True)
-    driver = webdriver.Chrome(options=chrome_options)
-    
-    # navigate to selected site
-    driver.get(selected_site['url'])
-    
-    # wait for user signal
-    keyboard.wait("ctrl+alt+t")
-    
-    # get text and type it
-    text_to_type = get_text_to_type(driver, bot_type)
-    if text_to_type:
-        type_text(text_to_type, bot_type)
-        print("Typing completed!")
-    else:
-        print("Failed to extract text from the page.")
-    
-    input("Press Enter to close the browser...")
-    driver.quit()
+    try:
+        # Setup Chrome driver
+        chrome_options = Options()
+        chrome_options.add_experimental_option("detach", True)
+        driver = webdriver.Chrome(options=chrome_options)
+        
+        # Navigate to selected site
+        driver.get(selected_site['url'])
+        
+        # Wait for user signal
+        keyboard.wait("ctrl+alt+t")
+        
+        # Get text and type it
+        text_to_type = get_text_to_type(driver, bot_type)
+        if text_to_type and not stop_script:
+            type_text(text_to_type, bot_type)
+            print("Typing completed!")
+        else:
+            print("Failed to extract text from the page or stopped by user.")
+        
+        input("Press Enter to close the browser...")
+        driver.quit()
+        
+    except KeyboardInterrupt:
+        print("\nScript interrupted by user (Ctrl+C)")
+        if 'driver' in locals():
+            driver.quit()
+        sys.exit(0)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        if 'driver' in locals():
+            driver.quit()
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
