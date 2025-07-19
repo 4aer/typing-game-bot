@@ -22,12 +22,12 @@ TYPING_SITES = {
     3: {
         "name": "Human Benchmark",
         "url": "https://humanbenchmark.com/tests/typing",
-        "interval": 0.01
+        "interval": 0 # filo keyboard warriors be like:
     },
     4: {
         "name": "Monkeytype (works fine at 15 seconds)",
         "url": "https://monkeytype.com/",
-        "interval": 0.05
+        "interval": 0.03
     }
 }
 
@@ -110,12 +110,24 @@ def type_text(text, bot_type):
     global stop_script
     interval = TYPING_SITES[bot_type]["interval"]
     
-    # Type character by character with stop checks
-    for char in text:
-        if stop_script:
-            print("Typing stopped by user.")
-            break
-        pyautogui.typewrite(char, interval=interval)
+    if interval == 0:
+        chunk_size = 50
+        for i in range(0, len(text), chunk_size):
+            if stop_script:
+                print("Typing stopped by user.")
+                break
+            chunk = text[i:i+chunk_size]
+            pyautogui.typewrite(chunk, interval=0)
+            time.sleep(0.01)  # small delay between chunks
+    else:
+        # check for stop every 20 characters
+        chunk_size = 20
+        for i in range(0, len(text), chunk_size):
+            if stop_script:
+                print("Typing stopped by user.")
+                break
+            chunk = text[i:i+chunk_size]
+            pyautogui.typewrite(chunk, interval=interval)
 
 def main():
     # Set up emergency stop
