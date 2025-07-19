@@ -46,7 +46,7 @@ def select_site():
             print("Please enter a valid number.")
 
 def get_text_to_type(driver, bot_type):
-    time.sleep(1) # wait for page to load
+    time.sleep(1) # wait for page to load 
 
     # select current page source
     if bot_type == 2:
