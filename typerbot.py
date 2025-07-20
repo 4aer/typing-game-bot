@@ -12,7 +12,7 @@ TYPING_SITES = {
     1: {
         "name": "TypeRacer",
         "url": "https://play.typeracer.com/",
-        "interval": 0.05
+        "interval": 0.03
     },
     2: {
         "name": "Nitro Type", 
@@ -102,8 +102,8 @@ def emergency_stop():
 
 def setup_emergency_stop():
     """Set up emergency stop hotkey"""
-    keyboard.add_hotkey('ctrl+shift+q', emergency_stop)
-    print("Emergency stop hotkey: Ctrl+Shift+Q")
+    keyboard.add_hotkey('caps lock+s', emergency_stop)
+    print("Emergency stop hotkey: CapsLock+S")
 
 def type_text(text, bot_type):
     """Type the text with appropriate interval for the selected site"""
@@ -140,7 +140,7 @@ def main():
     print(f"\nStarting bot for {selected_site['name']}")
     print(f"URL: {selected_site['url']}")
     print("Press Ctrl+Alt+T when ready to start typing...")
-    print("EMERGENCY STOP: Press Ctrl+Shift+Q to stop the script at any time")
+    print("EMERGENCY STOP: Press CapsLock+S to stop the script at any time")
     
     try:
         # Setup Chrome driver
