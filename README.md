@@ -50,7 +50,7 @@ python typerbot.py
 - **Action**: Begins the automated typing process
 
 ### Emergency Stops
-- **Ctrl+Shift+Q**: Immediate script termination
+- **Caps Lock+S**: Immediate script termination
 - **Ctrl+C**: Graceful shutdown in terminal
 - **Close Terminal**: Force stop the script
 
@@ -104,7 +104,7 @@ In the `type_text()` function:
 ### Troubleshooting
 - **Text Not Found**: Site structure may have changed
 - **Slow Performance**: Check your interval settings
-- **Can't Stop**: Use Ctrl+Shift+Q for emergency stop
+- **Can't Stop**: Use Caps Lock+S for emergency stop
 
 ## 🔧 Technical Details
 
