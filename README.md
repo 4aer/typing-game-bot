@@ -121,12 +121,7 @@ In the `type_text()` function:
 - **Error Resilience**: Comprehensive exception handling
 - **Resource Management**: Proper browser cleanup on exit
 
-## 📝 License
-
 This project is for educational purposes. Please use responsibly and respect the terms of service of the typing test websites.
-
-## 🤝 Contributing
-
 Feel free to contribute by:
 - Adding support for new typing sites
 - Improving text extraction accuracy
