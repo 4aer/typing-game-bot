@@ -24,9 +24,12 @@ pip install selenium beautifulsoup4 pyautogui keyboard
 - Chrome browser
 - Python 3.6+
 
+## Note
+
+If you want to skip the installation process, check the dist/ folder to download the executable file of this app. Windows may flag the executable as unsafe because it's not code-signed. This is normal for unsigned apps. Click "More info" → "Run anyway" to proceed. The source code is available for review if you prefer to run it directly with Python.
+
 ## Usage
 
-**Note:** If you want to skip the installation process, check the dist/ folder to download the executable file of this app. 
 ```bash
 python typerbot.py
 ```
