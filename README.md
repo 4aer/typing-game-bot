@@ -26,6 +26,7 @@ pip install selenium beautifulsoup4 pyautogui keyboard
 
 ## Usage
 
+**Note:** If you want to skip the installation process, check the dist/ folder to download the executable file of this app. 
 ```bash
 python typerbot.py
 ```
