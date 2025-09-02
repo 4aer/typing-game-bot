@@ -127,7 +127,3 @@ Feel free to contribute by:
 - Improving text extraction accuracy
 - Optimizing typing performance
 - Enhancing error handling
-
----
-
-**Happy Typing!** 🎯⌨️
