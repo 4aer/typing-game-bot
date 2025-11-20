@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 import pyautogui
 import keyboard
 import time
+import random
 import threading
 import sys
 
@@ -12,22 +13,26 @@ TYPING_SITES = {
     1: {
         "name": "TypeRacer",
         "url": "https://play.typeracer.com/",
-        "interval": 0.03
+        "interval": 0.03,
+        "variation": 0.01
     },
     2: {
         "name": "Nitro Type", 
         "url": "https://www.nitrotype.com/race",
-        "interval": 0.01
+        "interval": 0.01,
+        "variation": 0.005
     },
     3: {
         "name": "Human Benchmark",
         "url": "https://humanbenchmark.com/tests/typing",
-        "interval": 0
+        "interval": 0,
+        "variation": 0
     },
     4: {
         "name": "Monkeytype (works fine at 15 seconds)",
         "url": "https://monkeytype.com/",
-        "interval": 0.03
+        "interval": 0.03,
+        "variation": 0.01
     }
 }
 
@@ -44,6 +49,37 @@ def select_site():
                 return choice
             else:
                 print("Invalid choice. Please select 1-4.")
+        except ValueError:
+            print("Please enter a valid number.")
+
+def configure_speed():
+    """Let user adjust typing speed"""
+    print("\n" + "="*50)
+    print("Speed Configuration")
+    print("="*50)
+    print("1. Ultra Fast (may get detected)")
+    print("2. Fast (default)")
+    print("3. Normal (more human-like)")
+    print("4. Slow (very human-like)")
+    print("5. Custom")
+    
+    while True:
+        try:
+            choice = int(input("\nSelect speed (1-5): "))
+            if choice == 1:
+                return 0.01, 0.005, "Ultra Fast"
+            elif choice == 2:
+                return 0.03, 0.01, "Fast"
+            elif choice == 3:
+                return 0.05, 0.02, "Normal"
+            elif choice == 4:
+                return 0.08, 0.03, "Slow"
+            elif choice == 5:
+                interval = float(input("Enter base interval (0.01-0.2): "))
+                variation = float(input("Enter variation (0.005-0.05): "))
+                return interval, variation, "Custom"
+            else:
+                print("Invalid choice. Please select 1-5.")
         except ValueError:
             print("Please enter a valid number.")
 
@@ -113,10 +149,10 @@ def cleanup_keyboard():
     except:
         pass
 
-def type_text(text, bot_type):
-    """Type the text with appropriate interval for the selected site"""
+def type_text(text, base_interval, variation):
+    """Type the text with appropriate interval"""
     global stop_script, is_typing
-    interval = TYPING_SITES[bot_type]["interval"]
+    interval = base_interval
     is_typing = True
     
     if interval == 0:
@@ -135,7 +171,10 @@ def type_text(text, bot_type):
                 print("Typing stopped by user.")
                 break
             chunk = text[i:i+chunk_size]
-            pyautogui.typewrite(chunk, interval=interval)
+            # Random variation
+            current_interval = interval + random.uniform(-variation, variation)
+            current_interval = max(0.001, current_interval)
+            pyautogui.typewrite(chunk, interval=current_interval)
     
     is_typing = False
 
@@ -145,6 +184,9 @@ def main():
     # Select which site to use
     bot_type = select_site()
     selected_site = TYPING_SITES[bot_type]
+
+    # Configure typing speed
+    base_interval, variation, speed_name = configure_speed()
     
     print(f"\nStarting bot for {selected_site['name']}")
     print(f"URL: {selected_site['url']}")
@@ -181,7 +223,7 @@ def main():
             text_to_type = get_text_to_type(driver, bot_type)
             
             if text_to_type and not stop_script:
-                type_text(text_to_type, bot_type)
+                type_text(text_to_type, base_interval, variation)
                 if not stop_script:
                     print("\nTyping completed successfully!")
             else:
