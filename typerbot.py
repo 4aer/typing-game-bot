@@ -168,26 +168,41 @@ def main():
         # Set up emergency stop AFTER browser is ready
         setup_emergency_stop()
         
-        print("\n[*] Waiting for Ctrl+Alt+T...")
-        keyboard.wait("ctrl+alt+t")
+        # Main loop - keep running until user wants to quit
+        while True:
+            # Reset stop flag for each run
+            stop_script = False
+            
+            print("\nWaiting for Ctrl+Alt+T...")
+            keyboard.wait("ctrl+alt+t")
+            
+            # Get text and type it
+            print("Starting to type...")
+            text_to_type = get_text_to_type(driver, bot_type)
+            
+            if text_to_type and not stop_script:
+                type_text(text_to_type, bot_type)
+                if not stop_script:
+                    print("\nTyping completed successfully!")
+            else:
+                print("Failed to extract text from the page or stopped by user.")
+            
+            # Ask if user wants to continue
+            print("\n" + "="*50)
+            choice = input("Run again? (y/n): ").strip().lower()
+            
+            if choice != 'y':
+                print("Exiting...")
+                break
+            
+            print("Ready for next round! Start a new race/test in the browser.")
         
-        # Get text and type it
-        print("[*] Starting to type...")
-        text_to_type = get_text_to_type(driver, bot_type)
-        
-        if text_to_type and not stop_script:
-            type_text(text_to_type, bot_type)
-            if not stop_script:
-                print("\n[✓] Typing completed successfully!")
-        else:
-            print("[!] Failed to extract text from the page or stopped by user.")
-        
-        # Clean up keyboard hooks before waiting for input
+        # Clean up keyboard hooks before closing
         cleanup_keyboard()
         
         input("\nPress Enter to close the browser...")
         driver.quit()
-        print("[✓] Browser closed. You can run the script again!")
+        print("Browser closed. Adios.")
         
     except KeyboardInterrupt:
         print("\n[!] Script interrupted by user (Ctrl+C)")
