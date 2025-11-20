@@ -22,7 +22,7 @@ TYPING_SITES = {
     3: {
         "name": "Human Benchmark",
         "url": "https://humanbenchmark.com/tests/typing",
-        "interval": 0 # filo keyboard warriors be like:
+        "interval": 0
     },
     4: {
         "name": "Monkeytype (works fine at 15 seconds)",
@@ -48,9 +48,8 @@ def select_site():
             print("Please enter a valid number.")
 
 def get_text_to_type(driver, bot_type):
-    time.sleep(1) # wait for page to load
+    time.sleep(1)
 
-    # select current page source
     if bot_type == 2:
         driver.switch_to.window(driver.window_handles[-1])
     
@@ -92,23 +91,33 @@ def get_text_to_type(driver, bot_type):
 
 # Global flag to control script execution
 stop_script = False
+is_typing = False
 
 def emergency_stop():
-    """Emergency stop function"""
+    """Emergency stop function - only works during typing"""
     global stop_script
-    stop_script = True
-    print("\nEMERGENCY STOP ACTIVATED! Script will terminate...")
-    sys.exit(0)
+    if is_typing:
+        stop_script = True
+        print("\n[!] EMERGENCY STOP ACTIVATED!")
 
 def setup_emergency_stop():
     """Set up emergency stop hotkey"""
-    keyboard.add_hotkey('caps lock+s', emergency_stop)
-    print("Emergency stop hotkey: CapsLock+S")
+    # Use ESC key instead - more reliable and less prone to accidents
+    keyboard.on_press_key('esc', lambda _: emergency_stop())
+    print("Emergency stop: Press ESC during typing to stop")
+
+def cleanup_keyboard():
+    """Remove all keyboard hooks"""
+    try:
+        keyboard.unhook_all()
+    except:
+        pass
 
 def type_text(text, bot_type):
     """Type the text with appropriate interval for the selected site"""
-    global stop_script
+    global stop_script, is_typing
     interval = TYPING_SITES[bot_type]["interval"]
+    is_typing = True
     
     if interval == 0:
         chunk_size = 50
@@ -118,9 +127,8 @@ def type_text(text, bot_type):
                 break
             chunk = text[i:i+chunk_size]
             pyautogui.typewrite(chunk, interval=0)
-            time.sleep(0.01)  # small delay between chunks
+            time.sleep(0.01)
     else:
-        # check for stop every 20 characters
         chunk_size = 20
         for i in range(0, len(text), chunk_size):
             if stop_script:
@@ -128,10 +136,11 @@ def type_text(text, bot_type):
                 break
             chunk = text[i:i+chunk_size]
             pyautogui.typewrite(chunk, interval=interval)
+    
+    is_typing = False
 
 def main():
-    # Set up emergency stop
-    setup_emergency_stop()
+    global stop_script
     
     # Select which site to use
     bot_type = select_site()
@@ -139,42 +148,62 @@ def main():
     
     print(f"\nStarting bot for {selected_site['name']}")
     print(f"URL: {selected_site['url']}")
-    print("Press Ctrl+Alt+T when ready to start typing...")
-    print("EMERGENCY STOP: Press CapsLock+S to stop the script at any time")
+    print("\nInstructions:")
+    print("1. Click on the typing area in the browser")
+    print("2. Press Ctrl+Alt+T to start typing")
+    print("3. Press ESC during typing to stop early")
+    
+    driver = None
     
     try:
-        # Setup Chrome driver
+        # Setup Chrome driver with less verbose logging
         chrome_options = Options()
         chrome_options.add_experimental_option("detach", True)
-        driver = webdriver.Chrome(options=chrome_options)
+        chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
+        chrome_options.add_argument('--log-level=3')  # Suppress logs
         
-        # Navigate to selected site
+        driver = webdriver.Chrome(options=chrome_options)
         driver.get(selected_site['url'])
         
-        # Wait for user signal
+        # Set up emergency stop AFTER browser is ready
+        setup_emergency_stop()
+        
+        print("\n[*] Waiting for Ctrl+Alt+T...")
         keyboard.wait("ctrl+alt+t")
         
         # Get text and type it
+        print("[*] Starting to type...")
         text_to_type = get_text_to_type(driver, bot_type)
+        
         if text_to_type and not stop_script:
             type_text(text_to_type, bot_type)
-            print("Typing completed!")
+            if not stop_script:
+                print("\n[✓] Typing completed successfully!")
         else:
-            print("Failed to extract text from the page or stopped by user.")
+            print("[!] Failed to extract text from the page or stopped by user.")
         
-        input("Press Enter to close the browser...")
+        # Clean up keyboard hooks before waiting for input
+        cleanup_keyboard()
+        
+        input("\nPress Enter to close the browser...")
         driver.quit()
+        print("[✓] Browser closed. You can run the script again!")
         
     except KeyboardInterrupt:
-        print("\nScript interrupted by user (Ctrl+C)")
-        if 'driver' in locals():
+        print("\n[!] Script interrupted by user (Ctrl+C)")
+        cleanup_keyboard()
+        if driver:
             driver.quit()
         sys.exit(0)
     except Exception as e:
-        print(f"An error occurred: {e}")
-        if 'driver' in locals():
+        print(f"[!] An error occurred: {e}")
+        cleanup_keyboard()
+        if driver:
             driver.quit()
         sys.exit(1)
+    finally:
+        # Ensure keyboard hooks are cleaned up
+        cleanup_keyboard()
 
 if __name__ == "__main__":
     main()
