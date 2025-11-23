@@ -165,6 +165,8 @@ def type_text(text, base_interval, variation, human_like=True):
     global stop_script, is_typing, pause_typing, session_stats
     is_typing = True
     chars_typed = 0
+
+    print(f"\nStarting typing... ({len(text)} chars)")
     
     for i, char in enumerate(text): 
         # Check for stop
@@ -203,9 +205,18 @@ def type_text(text, base_interval, variation, human_like=True):
         else:
             # Fast mode
             pyautogui.typewrite(char, interval=base_interval)
+
+        chars_typed += 1
+
+        if chars_typed % 50 == 0:
+            progress = (chars_typed / len(text)) * 100
+            print(f"[{progress:.0f}%] {chars_typed}/{len(text)} characters")
     
     is_typing = False
     session_stats["total_characters"] += chars_typed
+
+    if not stop_script:
+        print(f"\n Typed {chars_typed} characters successfully.")
 
 def simulate_human_error(char, error_rate=0.02):
     """Randomly introduce typos then correct them"""
