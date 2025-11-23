@@ -128,6 +128,7 @@ def get_text_to_type(driver, bot_type):
 # Global flag to control script execution
 stop_script = False
 is_typing = False
+pause_typing = False
 
 def emergency_stop():
     """Emergency stop function - only works during typing"""
@@ -136,11 +137,13 @@ def emergency_stop():
         stop_script = True
         print("\n[!] EMERGENCY STOP ACTIVATED!")
 
-def setup_emergency_stop():
-    """Set up emergency stop hotkey"""
+def setup_hotkeys():
+    """Set up emergency stop hotkey and pause hotkeys"""
     # Use ESC key instead - more reliable and less prone to accidents
     keyboard.on_press_key('esc', lambda _: emergency_stop())
+    keyboard.on_press_key('p', lambda _: toggle_pause())
     print("Emergency stop: Press ESC during typing to stop")
+    print("Pause/Resume: Press P during typing")
 
 def cleanup_keyboard():
     """Remove all keyboard hooks"""
@@ -159,6 +162,9 @@ def type_text(text, base_interval, variation, human_like=True):
         if stop_script:
             print("\nTyping stopped by user.")
             break
+        # Check for pause
+        while pause_typing and not stop_script:
+            time.sleep(0.1)
         
         # Human-like typing with variation
         if human_like and base_interval > 0:
@@ -194,6 +200,16 @@ def simulate_human_error(char, error_rate=0.02):
         return True
     return False
 
+def toggle_pause():
+    """Pause/resume typing"""
+    global pause_typing
+    if is_typing:
+        pause_typing = not pause_typing
+        if pause_typing:
+            print("\nPAUSED - Press P to resume")
+        else:
+            print("\nRESUMED")
+
 def main():
     global stop_script
     
@@ -227,12 +243,13 @@ def main():
         driver.get(selected_site['url'])
         
         # Set up emergency stop AFTER browser is ready
-        setup_emergency_stop()
+        setup_hotkeys()
         
         # Main loop - keep running until user wants to quit
         while True:
             # Reset stop flag for each run
             stop_script = False
+            pause_typing = False
             
             print("\nWaiting for Ctrl+Alt+T...")
             keyboard.wait("ctrl+alt+t")
