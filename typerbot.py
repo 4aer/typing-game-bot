@@ -149,34 +149,50 @@ def cleanup_keyboard():
     except:
         pass
 
-def type_text(text, base_interval, variation):
-    """Type the text with appropriate interval"""
+def type_text(text, base_interval, variation, human_like=True):
+    """Type the text with human-like variations"""
     global stop_script, is_typing
-    interval = base_interval
     is_typing = True
     
-    if interval == 0:
-        chunk_size = 50
-        for i in range(0, len(text), chunk_size):
-            if stop_script:
-                print("Typing stopped by user.")
-                break
-            chunk = text[i:i+chunk_size]
-            pyautogui.typewrite(chunk, interval=0)
-            time.sleep(0.01)
-    else:
-        chunk_size = 20
-        for i in range(0, len(text), chunk_size):
-            if stop_script:
-                print("Typing stopped by user.")
-                break
-            chunk = text[i:i+chunk_size]
+    for i, char in enumerate(text):
+        # Check for stop
+        if stop_script:
+            print("\nTyping stopped by user.")
+            break
+        
+        # Human-like typing with variation
+        if human_like and base_interval > 0:
             # Random variation
-            current_interval = interval + random.uniform(-variation, variation)
-            current_interval = max(0.001, current_interval)
-            pyautogui.typewrite(chunk, interval=current_interval)
+            interval = base_interval + random.uniform(-variation, variation)
+            interval = max(0.001, interval)
+            
+            # Occasionally simulate a typo
+            if simulate_human_error(char):
+                # Type wrong char
+                wrong_char = random.choice('abcdefghijklmnopqrstuvwxyz')
+                pyautogui.typewrite(wrong_char, interval=interval)
+                time.sleep(0.1)
+                # Backspace
+                pyautogui.press('backspace')
+                time.sleep(0.05)
+            
+            # Type correct char
+            pyautogui.typewrite(char, interval=interval)
+            
+            # Occasional micro-pause (like thinking)
+            if i > 0 and i % 50 == 0 and random.random() < 0.3:
+                time.sleep(random.uniform(0.1, 0.3))
+        else:
+            # Fast mode
+            pyautogui.typewrite(char, interval=base_interval)
     
     is_typing = False
+
+def simulate_human_error(char, error_rate=0.02):
+    """Randomly introduce typos then correct them"""
+    if random.random() < error_rate:
+        return True
+    return False
 
 def main():
     global stop_script
@@ -188,6 +204,9 @@ def main():
     # Configure typing speed
     base_interval, variation, speed_name = configure_speed()
     
+    print("\n" + "="*50)
+    human_like = input("Enable human-like typing? (y/n): ").strip().lower() == 'y'
+
     print(f"\nStarting bot for {selected_site['name']}")
     print(f"URL: {selected_site['url']}")
     print("\nInstructions:")
@@ -223,7 +242,7 @@ def main():
             text_to_type = get_text_to_type(driver, bot_type)
             
             if text_to_type and not stop_script:
-                type_text(text_to_type, base_interval, variation)
+                type_text(text_to_type, base_interval, variation, human_like)
                 if not stop_script:
                     print("\nTyping completed successfully!")
             else:
