@@ -1,6 +1,7 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
+from datetime import datetime
 import pyautogui
 import keyboard
 import time
@@ -34,6 +35,13 @@ TYPING_SITES = {
         "interval": 0.03,
         "variation": 0.01
     }
+}
+
+session_stats = {
+    "races_completed": 0,
+    "total_characters": 0,
+    "start_time": None,
+    "errors_made": 0
 }
 
 def select_site():
@@ -135,7 +143,7 @@ def emergency_stop():
     global stop_script
     if is_typing:
         stop_script = True
-        print("\n[!] EMERGENCY STOP ACTIVATED!")
+        print("\nEMERGENCY STOP ACTIVATED!")
 
 def setup_hotkeys():
     """Set up emergency stop hotkey and pause hotkeys"""
@@ -154,10 +162,11 @@ def cleanup_keyboard():
 
 def type_text(text, base_interval, variation, human_like=True):
     """Type the text with human-like variations"""
-    global stop_script, is_typing
+    global stop_script, is_typing, pause_typing, session_stats
     is_typing = True
+    chars_typed = 0
     
-    for i, char in enumerate(text):
+    for i, char in enumerate(text): 
         # Check for stop
         if stop_script:
             print("\nTyping stopped by user.")
@@ -181,9 +190,12 @@ def type_text(text, base_interval, variation, human_like=True):
                 # Backspace
                 pyautogui.press('backspace')
                 time.sleep(0.05)
+                # Error counter
+                session_stats["errors_made"] += 1
             
             # Type correct char
             pyautogui.typewrite(char, interval=interval)
+            chars_typed += 1
             
             # Occasional micro-pause (like thinking)
             if i > 0 and i % 50 == 0 and random.random() < 0.3:
@@ -193,6 +205,7 @@ def type_text(text, base_interval, variation, human_like=True):
             pyautogui.typewrite(char, interval=base_interval)
     
     is_typing = False
+    session_stats["total_characters"] += chars_typed
 
 def simulate_human_error(char, error_rate=0.02):
     """Randomly introduce typos then correct them"""
@@ -210,8 +223,24 @@ def toggle_pause():
         else:
             print("\nRESUMED")
 
+def display_stats():
+    """Display session statistics"""
+    if session_stats["start_time"]:
+        elapsed = time.time() - session_stats["start_time"]
+        mins = int(elapsed // 60)
+        secs = int(elapsed % 60)
+        
+        print("\n" + "="*50)
+        print("SESSION STATISTICS")
+        print("="*50)
+        print(f"Races completed: {session_stats['races_completed']}")
+        print(f"Total characters: {session_stats['total_characters']}")
+        print(f"Simulated errors: {session_stats['errors_made']}")
+        print(f"Session time: {mins}m {secs}s")
+        print("="*50)
+
 def main():
-    global stop_script
+    global stop_script, pause_typing, session_stats
     
     # Select which site to use
     bot_type = select_site()
@@ -231,6 +260,7 @@ def main():
     print("3. Press ESC during typing to stop early")
     
     driver = None
+    session_stats["start_time"] = time.time()
     
     try:
         # Setup Chrome driver with less verbose logging
@@ -261,10 +291,12 @@ def main():
             if text_to_type and not stop_script:
                 type_text(text_to_type, base_interval, variation, human_like)
                 if not stop_script:
+                    session_stats["races_completed"] += 1
+                    display_stats()
                     print("\nTyping completed successfully!")
             else:
                 print("Failed to extract text from the page or stopped by user.")
-            
+                display_stats()
             # Ask if user wants to continue
             print("\n" + "="*50)
             choice = input("Run again? (y/n): ").strip().lower()
@@ -283,13 +315,14 @@ def main():
         print("Browser closed. Adios.")
         
     except KeyboardInterrupt:
-        print("\n[!] Script interrupted by user (Ctrl+C)")
+        print("\nScript interrupted by user (Ctrl+C)")
         cleanup_keyboard()
+        display_stats()
         if driver:
             driver.quit()
         sys.exit(0)
     except Exception as e:
-        print(f"[!] An error occurred: {e}")
+        print(f"An error occurred: {e}")
         cleanup_keyboard()
         if driver:
             driver.quit()
