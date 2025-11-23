@@ -47,6 +47,9 @@ session_stats = {
 def select_site():
     """Allow user to select which typing site to use"""
     print("\nAvailable typing sites:")
+    print("\n" + "="*50)
+    print("TYPING BOT - Site Selection")
+    print("="*50)
     for key, site in TYPING_SITES.items():
         print(f"{key}. {site['name']}")
     
@@ -131,6 +134,7 @@ def get_text_to_type(driver, bot_type):
         return None
     else:
         print(f"Text to type: {text[:50]}..." if len(text) > 50 else f"Text to type: {text}")
+        print(f"Length: {len(text)} characters")
     return text.strip()
 
 # Global flag to control script execution
@@ -265,10 +269,11 @@ def main():
 
     print(f"\nStarting bot for {selected_site['name']}")
     print(f"URL: {selected_site['url']}")
-    print("\nInstructions:")
+    print("\nINSTRUCTIONS:")
     print("1. Click on the typing area in the browser")
     print("2. Press Ctrl+Alt+T to start typing")
     print("3. Press ESC during typing to stop early")
+    print("4. Press P during typing to pause/resume")
     
     driver = None
     session_stats["start_time"] = time.time()
@@ -308,6 +313,7 @@ def main():
             else:
                 print("Failed to extract text from the page or stopped by user.")
                 display_stats()
+                
             # Ask if user wants to continue
             print("\n" + "="*50)
             choice = input("Run again? (y/n): ").strip().lower()
