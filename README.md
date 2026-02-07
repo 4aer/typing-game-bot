@@ -18,7 +18,7 @@ A Python automation bot that types on typing test websites. Built for fun and le
 ## Requirements
 
 ```bash
-pip install selenium beautifulsoup4 pyautogui keyboard
+pip install -r requirements.txt
 ```
 
 - Chrome browser
