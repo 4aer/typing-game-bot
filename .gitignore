@@ -1,9 +1,11 @@
 # Ignore Python virtual environments
 .venv/
+env/
 
 # Bytecode
 __pycache__/
 *.py[cod]
+*.so
 
 # Editor/project files
 .vscode/
@@ -13,3 +15,12 @@ __pycache__/
 # Environment/OS files
 .DS_Store
 Thumbs.db
+
+# Ignore Selenium WebDriver binaries
+chromedriver
+chromedriver.exe
+
+# Ignore logs
+typing_session_*.txt
+logs/
+*.log
